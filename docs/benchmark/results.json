@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "date": "2026-10-24",
+    "python": "3.12.3",
+    "langgraph": "1.2.17",
+    "langchain": "1.4.7",
+    "latency": 0.25,
+    "tool_latency": 0.1,
+    "repeats": 3
+  },
+  "rows": [
+    {
+      "task": "launch+flight (5 steps, 2 chains)",
+      "variant": "classic",
+      "llm_calls": 16,
+      "tool_calls": 5,
+      "replans": 0,
+      "seconds": 4.623,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "launch+flight (5 steps, 2 chains)",
+      "variant": "rewoo",
+      "llm_calls": 2,
+      "tool_calls": 5,
+      "replans": 0,
+      "seconds": 1.042,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "launch+flight (5 steps, 2 chains)",
+      "variant": "compiler",
+      "llm_calls": 2,
+      "tool_calls": 5,
+      "replans": 0,
+      "seconds": 0.736,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "per diem (3 steps)",
+      "variant": "classic",
+      "llm_calls": 10,
+      "tool_calls": 3,
+      "replans": 0,
+      "seconds": 2.869,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "per diem (3 steps)",
+      "variant": "rewoo",
+      "llm_calls": 2,
+      "tool_calls": 3,
+      "replans": 0,
+      "seconds": 0.825,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "per diem (3 steps)",
+      "variant": "compiler",
+      "llm_calls": 2,
+      "tool_calls": 3,
+      "replans": 0,
+      "seconds": 0.716,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "freezer (step fails)",
+      "variant": "classic",
+      "llm_calls": 10,
+      "tool_calls": 3,
+      "replans": 1,
+      "seconds": 2.866,
+      "correct": true,
+      "status": "done"
+    },
+    {
+      "task": "freezer (step fails)",
+      "variant": "rewoo",
+      "llm_calls": 2,
+      "tool_calls": 2,
+      "replans": 0,
+      "seconds": 0.712,
+      "correct": false,
+      "status": "done"
+    },
+    {
+      "task": "freezer (step fails)",
+      "variant": "compiler",
+      "llm_calls": 4,
+      "tool_calls": 4,
+      "replans": 1,
+      "seconds": 1.436,
+      "correct": true,
+      "status": "done"
+    }
+  ]
+}

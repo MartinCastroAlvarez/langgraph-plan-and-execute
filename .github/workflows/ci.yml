@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff + mypy + bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --all-extras
+      - name: ruff check
+        run: poetry run ruff check plan_and_execute tests examples
+      - name: ruff format --check
+        run: poetry run ruff format --check plan_and_execute tests examples
+      - name: mypy
+        run: poetry run mypy plan_and_execute
+      - name: bandit
+        run: poetry run bandit -c pyproject.toml -q -r plan_and_execute
+
+  audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root --all-extras
+      - name: pip-audit
+        run: |
+          # pip is tooling, not a shipped dependency: upgrade it so its own advisories don't fail the audit.
+          poetry run python -m pip install --upgrade -q pip
+          poetry run pip-audit
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install poetry
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      - name: Run pytest (fake model, no network)
+        run: poetry run pytest -q
+      - name: Quickstart example (three variants + plan review, offline)
+        run: poetry run python -m examples.quickstart
+      - name: CLI smoke run (fake provider, all variants)
+        run: poetry run python -m plan_and_execute --provider fake --variant all "How cold is the sample freezer in Fahrenheit?"
+      - name: Durable plan review smoke run (SQLite checkpointer, two processes)
+        run: |
+          poetry run python -m plan_and_execute --provider fake --variant compiler --approve --db ci.sqlite --thread ci "What do 4 days of Lisbon per diem cost for the Atlas team?"
+          poetry run python -m plan_and_execute --provider fake --variant compiler --db ci.sqlite --thread ci --resume approve | tee out.txt
+          grep -q "2040 EUR" out.txt
+      - name: Benchmark smoke run (short latency, one repeat)
+        run: poetry run python -m plan_and_execute.bench --latency 0.02 --tool-latency 0.01 --repeats 1
+      - name: Build the wheel and check the bundled notes are inside
+        run: |
+          poetry build -q
+          python - <<'PY'
+          import glob, zipfile
+          names = zipfile.ZipFile(glob.glob("dist/*.whl")[0]).namelist()
+          for f in ("project-atlas.md", "offices.md", "py.typed", "data/README.md"):
+              assert any(n.endswith(f) for n in names), f
+          print("wheel ok:", len(names), "files")
+          PY
